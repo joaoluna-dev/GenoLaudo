@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "Bem vindo ao assistente de instalação do GenoLaudo!"
-echo "São necessários no mínimo 55Gb de espaço livre de armazenamento para continuar"
+echo "São necessários no mínimo 70Gb de espaço livre de armazenamento para continuar"
 
 #verifica se o usuário possui o armazenamento necessário para a execução
 read -p "Deseja prosseguir? (s/n)" selection
@@ -27,27 +27,59 @@ tar -xvzf annovar.latest.tar.gz
 mkdir data
 mv annovar data/
 
-#instalando bancos de dados necessários: refGene, clinvar_20250721, gnomad41_exome, abraom, dbnsfp35a, dbscsnv11
-#cerca de 55Gb de dados serão baixados
-echo "Iniciando download de bancos de dados para anotação"
-echo "Isto pode demorar um pouco, a depender da sua conexão de internet e computador utilizado..."
-
-echo "Baixando definições de Genes..."
-perl annotate_variation.pl -buildver hg38 -downdb -webfrom annovar refGene humandb
-
-echo "Baixando ClinVar ..."
-perl annotate_variation.pl -buildver hg38 -downdb -webfrom annovar clinvar_20250721 humandb
-
-echo "Baixando banco de dados de frequência global (gnomAD)..."
-perl annotate_variation.pl -buildver hg38 -downdb -webfrom annovar gnomad41_exome humandb
-
-echo "Baixando banco de dados de frequências brasileiras (ABraOM)..."
-perl annotate_variation.pl -buildver hg38 -downdb -webfrom annovar abraom humandb
-
-echo "Baixando preditores in silico..."
-perl annotate_variation.pl -buildver hg38 -downdb -webfrom annovar dbnsfp35a humandb
-
-echo "Baixando scores de Splicing..."
-perl annotate_variation.pl -buildver hg38 -downdb -webfrom annovar dbscsnv11 humandb
-
 #sanity check do ANNOVAR
+if [[ -e data/annovar ]]; then
+  :
+else
+  echo "O diretório do annovar não foi corretamente instalado. Interrompendo execução."
+  exit 1
+fi
+
+mkdir data/annovar/humandb/dbs
+
+#movendo os bancos de dados padrões do annovar para o diretório dbs, que na montagem receberá os bancos de dados do usuário
+mv hg38_refGene.txt dbs/
+mv hg38_refGeneMrna.fa dbs/
+mv hg38_refGeneVersion.txt dbs/
+
+#sanity check das databases padrão do annovar
+if [[ "$(ls -A data/annovar/humandb/dbs | wc -l)" -eq 0 ]]; then
+  :
+else
+  echo "Os bancos de dados padrões do annovar não estão na pasta annovar/humandb/dbs. Interrompendo execução."
+  exit 1
+fi
+
+# --baixando e instalando o intervar--
+echo "Iniciando a instalação do InterVar..."
+#criando diretório
+mkdir data/intervar
+
+#baixando o mim2gene.txt
+echo "Baixando arquivo OMIM..."
+curl https://www.omim.org/static/omim/data/mim2gene.txt -o mim2gene.txt
+
+#baixando o intervar
+echo "Baixando InterVar..."
+wget https://github.com/WGLab/InterVar/archive/master.zip -O InterVar.zip
+
+#extraindo o intervar
+unzip InterVar.zip
+
+#movendo os arquivos do intervar e removendo arquivos residuais
+echo "Instalando InterVar..."
+mv InterVar-master/* data/intervar/
+
+#passando o arquivo mim2gene do OMIM para o diretório /intervar
+mv mim2gene.txt data/intervar/intervardb/
+
+#removendo arquivos temporários
+rm InterVar.zip
+rm -rf InterVar-master/
+
+#criando estrutura de pastas para o projeto
+echo "Criando estrutura de pastas para o projeto"
+mkdir data/temp
+mkdir data/raw
+mkdir data/genome
+mkdir data/output
