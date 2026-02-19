@@ -70,7 +70,7 @@ OPERATIONS="$OPERATIONS,f"
 # ==============================================================================
 # 2. NORMALIZAÇÃO E CONVERSÃO PARA AVINPUT
 # ==============================================================================
-echo "GenoLaudo - [1/4] Normalizando e convertendo para formato nativo ANNOVAR..."
+echo "GenoLaudo - [1/3] Normalizando e convertendo para formato nativo ANNOVAR..."
 NORM_VCF="${OUTPUT_BASE}.norm.vcf"
 AV_INPUT="${OUTPUT_BASE}.avinput"
 
@@ -82,7 +82,7 @@ perl "$CONVERT_ANNOVAR" -format vcf4 "$NORM_VCF" > "$AV_INPUT" 2>/dev/null
 # ==============================================================================
 # 3. ANOTAÇÃO DAS VARIANTES
 # ==============================================================================
-echo "GenoLaudo - [2/4] Executando ANNOVAR..."
+echo "GenoLaudo - [2/3] Executando ANNOVAR..."
 
 # Nota: Sem a flag -vcfinput. O output será um arquivo tabular .txt perfeito.
 perl "$TABLE_ANNOVAR" "$AV_INPUT" "$DB_DIR" \
@@ -101,26 +101,9 @@ if [ ! -f "$RAW_TXT" ]; then
 fi
 
 # ==============================================================================
-# 4. FILTRAGEM DE BENIGNAS NO ARQUIVO TXT
-# ==============================================================================
-echo "GenoLaudo - [3/4] Removendo variantes Benignas do relatório..."
-
-CLEAN_TXT="${OUTPUT_BASE}.clean_multianno.txt"
-
-# Lê o arquivo tabular gerado e remove linhas que contêm "Benign" ou "Likely_benign"
-awk -F'\t' '{
-    if (NR==1) { print $0; next } # Mantém o cabeçalho
-    if ($0 ~ /\tBenign/ || $0 ~ /\tLikely_benign/ || $0 ~ /Benign;/ || $0 ~ /Likely_benign;/) { next }
-    print $0
-}' "$RAW_TXT" > "$CLEAN_TXT"
-
-# Substitui o original pelo limpo para que o InterVar leia apenas as suspeitas
-mv "$CLEAN_TXT" "$RAW_TXT"
-
-# ==============================================================================
 # 5. CLASSIFICAÇÃO DAS VARIANTES USANDO O INTERVAR
 # ==============================================================================
-echo "GenoLaudo - [4/4] Executando InterVar (ACMG)..."
+echo "GenoLaudo - [3/3] Executando InterVar (ACMG)..."
 
 # 1. Cria links simbólicos temporários para satisfazer a checagem rígida do InterVar
 ln -sf "$ANNOVAR_DIR/annotate_variation.pl" ./annotate_variation.pl
@@ -150,7 +133,7 @@ fi
 # 3. Limpeza dos links temporários
 echo "  [AVISO] Removendo arquivos temporários..."
 rm -f ./annotate_variation.pl ./convert2annovar.pl
-rm "$RAW_TXT.grl_p" "$RAW_TXT" "$AV_INPUT"
+rm "$RAW_TXT.grl_p" "$AV_INPUT"
 
 echo "=============================================================================="
 echo "Anotação concluída."
