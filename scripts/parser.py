@@ -430,9 +430,8 @@ def main(vcf_path, annovar_path, intervar_path, output_json_path):
 
 
 if __name__ == "__main__":
-    #verificação dos argumentos
-    if len(sys.argv) != 5:
-        print("Uso: python parser.py <input.norm.vcf> <input.multianno.txt> <input.intervar> <output.json>")
-        sys.exit(1)
     #chamada da função main, que inicia o parsing
-    main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+    main(snakemake.input.norm_vcf,
+         snakemake.input.annovar_file,
+         snakemake.input.intervar_file,
+         snakemake.output.output_json)

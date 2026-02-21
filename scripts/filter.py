@@ -14,42 +14,20 @@ print("Referências para os valores definidos para a filtragem: \n"
       "Roy et al. (2018) - AMP/CAP Guidelines. DOI: doi.org/10.1016/j.jmoldx.2017.11.003")
 print("==============================================================================")
 # arquivos de entrada e saída
-# input_file = snakemake.input.vcf
-input_file = sys.argv[1]
+input_file = snakemake.input.vcf
+output_file = snakemake.output.output_file
 
-# output_file = snakemake.output.output_file
-output_file = sys.argv[2]
-
-# parameters
-# min_depth = snakemake.params.min_depth
-min_depth = 20
-
-# min_qual = snakemake.params.min_qual
-min_qual = 30
-
-# min_qd = snakemake.params.min_qd
-min_qd = 2.0
-
-# min_mq = snakemake.params.min_mq
-min_mq = 40.0
-
-# max_fs_snp = snakemake.params.max_fs_snp
-max_fs_snp = 60.0
-
-# max_fs_indel = snakemake.params.max_fs_indel
-max_fs_indel = 200.0
-
-# max_sor = snakemake.params.max_sor
-max_sor = 3.0
-
-# min_mq_rank_sum = snakemake.params.min_mq_rank_sum
-min_mq_rank_sum = -12.5
-
-# min_read_pos_rank_sum_snp = snakemake.params.min_read_pos_rank_sum_snp
-min_read_pos_rank_sum_snp = -8.0
-
-# min_read_pos_rank_sum_indel = snakemake.params.min_read_pos_rank_sum_indel
-min_read_pos_rank_sum_indel = -20.0
+# parâmetros
+min_depth = snakemake.params.min_depth
+min_qual = snakemake.params.min_qual
+min_qd = snakemake.params.min_qd
+min_mq = snakemake.params.min_mq
+max_fs_snp = snakemake.params.max_fs_snp
+max_fs_indel = snakemake.params.max_fs_indel
+max_sor = snakemake.params.max_sor
+min_mq_rank_sum = snakemake.params.min_mq_rank_sum
+min_read_pos_rank_sum_snp = snakemake.params.min_read_pos_rank_sum_snp
+min_read_pos_rank_sum_indel = snakemake.params.min_read_pos_rank_sum_indel
 
 # criação do iterável a partir do vcf de entrada, e o escritor que criará o vcf de saída
 print("GenoLaudo - Lendo arquivo de entrada...")
