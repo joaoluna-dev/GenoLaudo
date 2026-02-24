@@ -10,7 +10,7 @@ INTERVAR_DIR="$PROJECT_ROOT/data/intervar"
 TABLE_ANNOVAR="$ANNOVAR_DIR/table_annovar.pl"
 CONVERT_ANNOVAR="$ANNOVAR_DIR/convert2annovar.pl"
 DB_DIR="$ANNOVAR_DIR/humandb/dbs"
-GENOME_DIR="$PROJECT_ROOT/data/genome" # Modificado para apontar apenas para o diretório
+GENOME_DIR="$PROJECT_ROOT/data/genome"
 
 if [ "$#" -ne 2 ]; then
     echo "Uso: $0 <input_vcf> <output_basename>"
@@ -41,9 +41,11 @@ get_db_filename() {
     ls "$DB_DIR"/hg38_*"$1"*.txt 2>/dev/null | head -n 1
 }
 
-# RefGene
-if [ -z "$(get_db_filename "refGene")" ]; then echo "[ERRO] refGene não encontrado."; exit 1; fi
-PROTOCOLS="refGene"
+# RefGene (BUSCA DINÂMICA)
+REFGENE_FILE=$(get_db_filename "refGene")
+if [ -z "$REFGENE_FILE" ]; then echo "[ERRO] refGene não encontrado."; exit 1; fi
+REFGENE_NAME=$(basename "$REFGENE_FILE" | sed 's/hg38_//;s/.txt//')
+PROTOCOLS="$REFGENE_NAME"
 OPERATIONS="g"
 
 # ClinVar
@@ -100,7 +102,7 @@ AV_INPUT="${OUTPUT_BASE}.avinput"
 bcftools norm -m -any -f "$REF_GENOME" "$INPUT_VCF" > "$NORM_VCF"
 
 # Converte para o formato seguro (impede o erro de reconstrução do VCF)
-perl "$CONVERT_ANNOVAR" -format vcf4 "$NORM_VCF" > "$AV_INPUT" 2>/dev/null
+perl "$CONVERT_ANNOVAR" -format vcf4 "$NORM_VCF" > "$AV_INPUT" #2>/dev/null
 
 # ==============================================================================
 # 3. ANOTAÇÃO DAS VARIANTES
@@ -123,6 +125,14 @@ if [ ! -f "$RAW_TXT" ]; then
     exit 1
 fi
 
+# CORREÇÃO INTELIGENTE DE CABEÇALHO PARA O INTERVAR
+# O InterVar exige que as colunas se chamem "Func.refGene", "Gene.refGene", etc.
+# Se o banco detectado foi "refGeneWithVer", renomeamos as colunas apenas no cabeçalho.
+if [ "$REFGENE_NAME" != "refGene" ]; then
+    echo "  -> Adaptando nomenclatura do cabeçalho para compatibilidade com InterVar..."
+    sed -i "1s/$REFGENE_NAME/refGene/g" "$RAW_TXT"
+fi
+
 # ==============================================================================
 # 5. CLASSIFICAÇÃO DAS VARIANTES USANDO O INTERVAR
 # ==============================================================================
@@ -139,7 +149,6 @@ if [ -f "$INTERVAR_DIR/Intervar.py" ]; then INTERVAR_EXEC="$INTERVAR_DIR/Interva
 
 if [ -n "$INTERVAR_EXEC" ]; then
     # Adicionamos a flag --skip_annovar
-    # Isso força o InterVar a ler diretamente o arquivo .txt que limpamos no passo 4
     python3 "$INTERVAR_EXEC" \
         -b hg38 \
         -i "$AV_INPUT" \
@@ -156,7 +165,7 @@ fi
 # 3. Limpeza dos links temporários
 echo "  [AVISO] Removendo arquivos temporários..."
 rm -f ./annotate_variation.pl ./convert2annovar.pl
-rm "$RAW_TXT.grl_p" "$AV_INPUT"
+rm -f "$RAW_TXT.grl_p" "$AV_INPUT"
 
 echo "=============================================================================="
 echo "Anotação concluída."
