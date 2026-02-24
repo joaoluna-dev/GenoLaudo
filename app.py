@@ -6,11 +6,15 @@ import pathlib
 import os
 import datetime
 
+if 'info_message' not in st.session_state:
+    st.session_state.info_message = None
+
+
 #funções principais
 
 def filter_data(variants_df, exame, genes):
     if (exame == "Painel Genético" or exame == "Gene") and not genes:
-        st.error(f"Nenhum gene foi selecionado para o exame {exame}")
+        st.session_state.info_message = "Nenhum gene foi selecionado para o exame {exame}"
         return None
 
     elif exame == "Gene" and genes:
@@ -243,9 +247,9 @@ def create_html(filtered_dataframe):
 def create_pdf(html):
     HTML(string=html).write_pdf(pdf_file)
     if os.path.exists(pdf_file) and os.path.getsize(pdf_file) > 0:
-        st.success("Arquivo PDF criado!")
+        st.session_state.info_message = f"Arquivo PDF criado com sucesso em {pdf_file}"
     else:
-        st.error("Arquivo pdf não criado. Tente novamente.")
+        st.session_state.info_message = "Arquivo pdf não criado. Tente novamente."
 
 
 def execute():
@@ -254,7 +258,7 @@ def execute():
         html_string = create_html(filtered_data)
         create_pdf(html_string)
     except Exception as e:
-        st.error(f"Ocorreu um erro durante a criação do laudo: {e}")
+        st.session_state.info_message = f"Ocorreu um erro durante a criação do laudo: {e}"
 
 
 
@@ -280,7 +284,9 @@ for file in os.listdir(json_file_path):
 
 #lendo os arquivos .json obtidos
 for json_file in files:
-    json_folder = root / json_file_path / json_file.strip("_report.json")
+    json_folder = root / output_path / json_file.strip("_report.json")
+    if not os.path.exists(json_folder):
+        os.mkdir(json_folder)
     with st.expander(f"Arquivo {json_file}", expanded=False):
         with open(f'{json_file_path}/{json_file}', 'r') as file:
             data = json.load(file)
@@ -367,6 +373,9 @@ for json_file in files:
                         st.text("* Campos obrigatórios.")
                         # Botão de submissão do formulário
                         submit_button = st.form_submit_button(label=f"Salvar Laudo: {sample}", on_click=execute())
+
+                    if submit_button:
+                        st.info(st.session_state.info_message)
 
 
 
