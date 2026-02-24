@@ -1,4 +1,4 @@
-#script de parsing dos dados de anotação
+# script de parsing dos dados de anotação
 
 import sys
 import os
@@ -16,15 +16,17 @@ def parse_aachange(aachange):
     """
 
     # verifica se o campo é nulo ou não, caso sim, atribui o valor unknown para Transcript e Variant
-    if pd.isna(aachange) or aachange == '.' or aachange == '':
+    if pd.isna(aachange) or aachange == "." or aachange == "":
         return "Unknown", "Unknown"
 
     # splitting da string de aachange para obter a notação HGVS
-    parts = str(aachange).split(',')[0].split(':')
+    parts = str(aachange).split(",")[0].split(":")
     if len(parts) >= 5:
         transcript = parts[1]
         # Monta a string "c.XXX (p.XXX)" ou apenas "c.XXX"
-        variant_hgvs = f"{parts[3]} ({parts[4]})" if len(parts) > 4 else f"{parts[3]}"
+        variant_hgvs = (
+            f"{parts[3]} ({parts[4]})" if len(parts) > 4 else f"{parts[3]}"
+        )
         return transcript, variant_hgvs
 
     return "Unknown", str(aachange)
@@ -36,27 +38,27 @@ def parse_disease(clndn_str):
     param clndn_str: recebe a string do clinvar (CLNDN) do arquivo do annovar
     return: string formatada das doenças (separadas por " | ")
     """
-    #verifica se o valor é válido ou nulo
-    if pd.isna(clndn_str) or clndn_str == '.':
+    # verifica se o valor é válido ou nulo
+    if pd.isna(clndn_str) or clndn_str == ".":
         return "Not provided"
 
-    #recebe a coluna CLNDN do clinvar, e divide por |, para o caso de mais de uma doença
-    parts = str(clndn_str).split('|')
+    # recebe a coluna CLNDN do clinvar, e divide por |, para o caso de mais de uma doença
+    parts = str(clndn_str).split("|")
     valid_diseases = []
 
-    #itera sobre os elementos divididos pelo |
+    # itera sobre os elementos divididos pelo |
     for p in parts:
-        clean_name = p.replace('_', ' ').strip()  #remove caracteres _
-        #filtra dados que não são relevantes
+        clean_name = p.replace("_", " ").strip()  # remove caracteres _
+        # filtra dados que não são relevantes
         if clean_name.lower() not in ["not provided", "not specified", ""]:
-            #adiciona as doenças válidas à lista valid_diseases
+            # adiciona as doenças válidas à lista valid_diseases
             valid_diseases.append(clean_name)
 
-    #caso nenhuma doença válida, retorna "not provided"
+    # caso nenhuma doença válida, retorna "not provided"
     if not valid_diseases:
         return "Not provided"
 
-    #reúne os nomes de doenças válidas, ordena os nomes e remove duplicatas
+    # reúne os nomes de doenças válidas, ordena os nomes e remove duplicatas
     return " | ".join(sorted(list(set(valid_diseases))))
 
 
@@ -70,27 +72,32 @@ def load_orpha_mapping(intervar_dir):
     # cria o diciońário de mapeamento
     mapping = {}
 
-    #obtém o caminho do arquivo do orphanet (orpha.txt)
+    # obtém o caminho do arquivo do orphanet (orpha.txt)
     filepath = os.path.join(intervar_dir, "intervardb", "orpha.txt")
 
     # caso o arquivo exista, processa o mesmo
     if os.path.exists(filepath):
         # ignora erros de encoding caso o arquivo tenha caracteres especiais
-        with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
+        with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
             next(f, None)  # pula a linha de cabeçalho usando o next
             for line in f:
                 # remove caracteres de espaço e separa a linha original
-                parts = line.strip().split('\t')
+                parts = line.strip().split("\t")
                 if len(parts) >= 2:
-                    info = parts[1].split('|')
+                    info = parts[1].split("|")
                     if len(info) >= 6:
                         syndrome = info[1]  # obtém o nome do fenótipo
-                        inheritance = info[3] if info[3] else "Unknown"  # obtém a herança
+                        inheritance = (
+                            info[3] if info[3] else "Unknown"
+                        )  # obtém a herança
                         omims = info[5].split()
 
                         for omim in omims:
                             # salva síndrome e herança num mini-dicionário para cada OMIM
-                            mapping[omim] = {"syndrome": syndrome, "inheritance": inheritance}
+                            mapping[omim] = {
+                                "syndrome": syndrome,
+                                "inheritance": inheritance,
+                            }
     else:
         print(f"[AVISO] Arquivo de tradução não encontrado em: {filepath}")
 
@@ -106,16 +113,16 @@ def parse_omim_disease(omim_str, orpha_mapping):
     """
 
     # verifica se a linha obtida é um valor nulo ou válido
-    if pd.isna(omim_str) or str(omim_str).strip() in ['.', '']:
+    if pd.isna(omim_str) or str(omim_str).strip() in [".", ""]:
         return "Not provided", "Unknown"
 
-    #obtém os OMIM ids o processamento
-    ids = str(omim_str).replace('_', ' ').strip(';').split(';')
+    # obtém os OMIM ids o processamento
+    ids = str(omim_str).replace("_", " ").strip(";").split(";")
     names = []
     inheritances = []
 
-    #itera sobre os OMIM ids, caso o ID seja nulo, pula a execução
-    #caso o ID esteja no dicionário de mapeamento, obtém a(as) síndrome correspondente
+    # itera sobre os OMIM ids, caso o ID seja nulo, pula a execução
+    # caso o ID esteja no dicionário de mapeamento, obtém a(as) síndrome correspondente
     for mim_id in ids:
         mim_id = mim_id.strip()
         if not mim_id:
@@ -124,20 +131,29 @@ def parse_omim_disease(omim_str, orpha_mapping):
         if mim_id in orpha_mapping:
             names.append(orpha_mapping[mim_id]["syndrome"])
 
-            #tenta capturar a herança da doença, e limpa tags HTML e caracteres de preenchimento indesejados
-            inh = (str(
-                orpha_mapping[mim_id]["inheritance"])
-                   .replace('<br>', ' ')
-                   .replace('&nbsp;', ' '))
-            #verifica se a herança é valida
-            if inh.strip() and inh.strip() not in ["Unknown", "Not applicable", "-"]:
+            # tenta capturar a herança da doença, e limpa tags HTML e caracteres de preenchimento indesejados
+            inh = (
+                str(orpha_mapping[mim_id]["inheritance"])
+                .replace("<br>", " ")
+                .replace("&nbsp;", " ")
+            )
+            # verifica se a herança é valida
+            if inh.strip() and inh.strip() not in [
+                "Unknown",
+                "Not applicable",
+                "-",
+            ]:
                 inheritances.append(inh.strip())
         else:
             names.append(f"OMIM ID: {mim_id}")
 
-    #une as doenças correspondentes ao ID e as heranças das doenças
+    # une as doenças correspondentes ao ID e as heranças das doenças
     final_disease = " | ".join(sorted(list(set(names))))
-    final_inheritance = " | ".join(sorted(list(set(inheritances)))) if inheritances else "Unknown"
+    final_inheritance = (
+        " | ".join(sorted(list(set(inheritances))))
+        if inheritances
+        else "Unknown"
+    )
 
     return final_disease, final_inheritance
 
@@ -148,34 +164,34 @@ def parse_intervar(iv_str):
     param iv_str: recebe o elemento iterado da coluna de classificação do intervar
     return: a classificação do intervar (ex: Benign) e a(s) evidência(s) (ex: AB1)
     """
-    #verifica se a string é válida ou inválida
-    if pd.isna(iv_str) or iv_str == '.':
+    # verifica se a string é válida ou inválida
+    if pd.isna(iv_str) or iv_str == ".":
         return "Not classified", ""
 
-    #ex: InterVar: Benign PVS1=0 PS=[0, 0, 0, 0, 0] PM=[0, 0, 0, 0, 0, 0, 0] PP=[0, 0, 1, 0, 0, 0] BA1=1 BS=[1, 0, 0, 0, 0] BP=[0, 0, 0, 0, 0, 0, 0, 0]
-    #remove o "InterVar", e remove espaços
+    # ex: InterVar: Benign PVS1=0 PS=[0, 0, 0, 0, 0] PM=[0, 0, 0, 0, 0, 0, 0] PP=[0, 0, 1, 0, 0, 0] BA1=1 BS=[1, 0, 0, 0, 0] BP=[0, 0, 0, 0, 0, 0, 0, 0]
+    # remove o "InterVar", e remove espaços
     clean = str(iv_str).replace("InterVar: ", "").strip()
-    #separa os elementos
+    # separa os elementos
     parts = clean.split()
 
     classification_words = []
     evidence_list = []
 
-    #obtém as evidências da string processada anteriormente
+    # obtém as evidências da string processada anteriormente
     hit_evidence = False  # A nossa trava lógica
 
     for p in parts:
-        if '=' in p:
-            #obtém a evidência, e avalia o seu valor
+        if "=" in p:
+            # obtém a evidência, e avalia o seu valor
             hit_evidence = True
-            #caso exista evidência, adiciona ela a lista de evidências
-            if '=1' in p:
-                evidence_list.append(p.split('=')[0])
+            # caso exista evidência, adiciona ela a lista de evidências
+            if "=1" in p:
+                evidence_list.append(p.split("=")[0])
         elif not hit_evidence:
-            #guarda palavras se ainda não tiver chegado na seção de evidências
+            # guarda palavras se ainda não tiver chegado na seção de evidências
             classification_words.append(p)
 
-    #reúne as strings de evidência e classificação
+    # reúne as strings de evidência e classificação
     classification = " ".join(classification_words).capitalize()
     evidence_str = ", ".join(evidence_list)
 
@@ -183,24 +199,30 @@ def parse_intervar(iv_str):
 
 
 def main(vcf_path, annovar_path, intervar_path, output_json_path):
-    print("==============================================================================")
+    print(
+        "=============================================================================="
+    )
     print("GenoLaudo - Iniciando Parsing das anotações...")
-    print("Referências para os valores obtidos para a montagem do json: \n"
-          "Richards, S., Aziz, N., Bale, S., Bick, D., Das, S., Gastier-Foster, J., Grody, W. W., Hegde, M., \n"
-          "Lyon, E., Spector, E., Voelkerding, K., Rehm, H. L., & ACMG Laboratory Quality Assurance Committee (2015).\n"
-          "Standards and guidelines for the interpretation of sequence variants: a joint \n "
-          "consensus recommendation of the American College of Medical Genetics and \n "
-          "Genomics and the Association for Molecular Pathology. \n "
-          "Genetics in medicine : official journal of the American College of Medical Genetics, 17(5), 405–424. \n"
-          "DOI: doi.org/10.1038/gim.2015.30")
-    print("==============================================================================")
+    print(
+        "Referências para os valores obtidos para a montagem do json: \n"
+        "Richards, S., Aziz, N., Bale, S., Bick, D., Das, S., Gastier-Foster, J., Grody, W. W., Hegde, M., \n"
+        "Lyon, E., Spector, E., Voelkerding, K., Rehm, H. L., & ACMG Laboratory Quality Assurance Committee (2015).\n"
+        "Standards and guidelines for the interpretation of sequence variants: a joint \n "
+        "consensus recommendation of the American College of Medical Genetics and \n "
+        "Genomics and the Association for Molecular Pathology. \n "
+        "Genetics in medicine : official journal of the American College of Medical Genetics, 17(5), 405–424. \n"
+        "DOI: doi.org/10.1038/gim.2015.30"
+    )
+    print(
+        "=============================================================================="
+    )
 
-    #obtenção dinâmica do orpha.txt
+    # obtenção dinâmica do orpha.txt
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(script_dir)
     real_intervar_dir = os.path.join(project_root, "data", "intervar")
 
-    #criação do dicionário com o mapeamento OMIM ID: fenótipo a partir do orpha.txt
+    # criação do dicionário com o mapeamento OMIM ID: fenótipo a partir do orpha.txt
     print("[0/4] Carregando dicionário Orphanet (OMIM to Syndrome)...")
     orpha_mapping = load_orpha_mapping(real_intervar_dir)
     print(f"      -> {len(orpha_mapping)} IDs médicos mapeados.")
@@ -208,36 +230,36 @@ def main(vcf_path, annovar_path, intervar_path, output_json_path):
     # =========================================================================
     # 1. LER O VCF: OBTENÇÃO DO HGVS E GENÓTIPO DA VARIANTE PARA CADA AMOSTRA
     # =========================================================================
-    #leitura do vcf com o cyvcf2
+    # leitura do vcf com o cyvcf2
     print(f"[1/4] Lendo VCF: {vcf_path}")
     vcf = VCF(vcf_path)
-    sample_names = vcf.samples  #obtenção dos nomes das amostras no vcf.norm
+    sample_names = vcf.samples  # obtenção dos nomes das amostras no vcf.norm
 
-    #cria a base do json com a estrutura {sample: {dados}...}
+    # cria a base do json com a estrutura {sample: {dados}...}
     samples_dict = {sample: {} for sample in sample_names}
-    #set para remover duplicatas de coodernadas genômicas
+    # set para remover duplicatas de coodernadas genômicas
     all_valid_keys = set()
 
-    #iterando sobre o VCF para obter a notação HGVS das variantes
+    # iterando sobre o VCF para obter a notação HGVS das variantes
     for variant in vcf:
-        chrom = variant.CHROM.replace('chr', '')
+        chrom = variant.CHROM.replace("chr", "")
         pos = str(variant.POS)
         ref = variant.REF
         alt = variant.ALT[0]
         key = f"{chrom}_{pos}_{ref}_{alt}"
 
-        #itera sobre as amostras, se o genótipo for missing, a variante correspondente não é registrada para a amostra
+        # itera sobre as amostras, se o genótipo for missing, a variante correspondente não é registrada para a amostra
         for idx, sample_name in enumerate(sample_names):
             gt = variant.genotypes[idx]
-            a, b = gt[0], gt[1]  #genótipo diploide obtido
+            a, b = gt[0], gt[1]  # genótipo diploide obtido
 
             # pula genótipos missing, ou genótipos 0/0, que não possuem a variante em nenhum dos alelos
             if a == -1 or b == -1 or (a == 0 and b == 0):
                 continue
 
-            #define a zigosidade da amostra
+            # define a zigosidade da amostra
             zygosity = "Homozygous" if a == b else "Heterozygous"
-            #a amostra homo ou heterozigota é inicializada no dicionário, criando o esquema para a variante
+            # a amostra homo ou heterozigota é inicializada no dicionário, criando o esquema para a variante
             samples_dict[sample_name][key] = {
                 "Genomic_Coordinate": f"chr{chrom}:{pos}:{ref}:{alt}",
                 "Gene": "Unknown",
@@ -252,79 +274,146 @@ def main(vcf_path, annovar_path, intervar_path, output_json_path):
                 "ABraOM_Freq": 0,
                 "REVEL_score": ".",
                 "CADD_phred": ".",
-                "Parental_Origin": "Unknown"
+                "Parental_Origin": "Unknown",
             }
-            all_valid_keys.add(key)  #armazena o HGVS da variante, para posterior verificação da sua validade
+            all_valid_keys.add(
+                key
+            )  # armazena o HGVS da variante, para posterior verificação da sua validade
 
     print(f"      -> Total de amostras: {len(sample_names)}")
     print(f"      -> {len(all_valid_keys)} variantes válidas retidas.")
 
-    gc.collect()  #limpeza de resíduos na memória
+    gc.collect()  # limpeza de resíduos na memória
 
     # =========================================================================
     # 2. LER O ANNOVAR: OBTENÇÃO DA DOENÇA, FREQUÊNCIA, REVEL SCORE E CADD
     # =========================================================================
-    #leitura do annovar, e processamento do header para obter as colunas
+    # leitura do annovar, e processamento do header para obter as colunas
     print(f"[2/4] Lendo anotações ANNOVAR: {annovar_path}")
-    with open(annovar_path, 'r') as f:
-        header = f.readline().strip().split('\t')
+    with open(annovar_path, "r") as f:
+        header = f.readline().strip().split("\t")
 
-    #identificando as colunas presentes no ANNOVAR
-    #next(): itera sobre o elemento até obter a coluna correspondente, caso o elemento não exista, retorna None
-    clndn_col = next((c for c in header if c == 'CLNDN'), None)
-    abraom_col = next((c for c in header if c == 'abraom_freq'), None)
-    revel_col = next((c for c in header if c == 'REVEL_score'), None)
-    cadd_col = next((c for c in header if c == 'CADD_phred'), None)
+    # identificando as colunas presentes no ANNOVAR
+    # next(): itera sobre o elemento até obter a coluna correspondente, caso o elemento não exista, retorna None
+    clndn_col = next((c for c in header if c == "CLNDN"), None)
+    abraom_col = next((c for c in header if c == "abraom_freq"), None)
+    revel_col = next((c for c in header if c == "REVEL_score"), None)
+    cadd_col = next((c for c in header if c == "CADD_phred"), None)
 
-    #colunas padrão do ANNOVAR
-    #adiciona a cols_anno as colunas obtidas anteriormente caso elas existam
-    cols_anno = ['Chr', 'Start', 'Ref', 'Alt', 'Gene.refGene', 'Func.refGene', 'ExonicFunc.refGene', 'AAChange.refGene']
-    if clndn_col: cols_anno.append(clndn_col)
-    if abraom_col: cols_anno.append(abraom_col)
-    if revel_col: cols_anno.append(revel_col)
-    if cadd_col: cols_anno.append(cadd_col)
+    # colunas padrão do ANNOVAR
+    # adiciona a cols_anno as colunas obtidas anteriormente caso elas existam
+    cols_anno = [
+        "Chr",
+        "Start",
+        "Ref",
+        "Alt",
+        "Gene.refGene",
+        "Func.refGene",
+        "ExonicFunc.refGene",
+        "AAChange.refGene",
+    ]
+    if clndn_col:
+        cols_anno.append(clndn_col)
+    if abraom_col:
+        cols_anno.append(abraom_col)
+    if revel_col:
+        cols_anno.append(revel_col)
+    if cadd_col:
+        cols_anno.append(cadd_col)
 
-    #itera sobre as linhas do arquivo do ANNOVAR, retornando chunks de 100000 linhas, para evitar estouro da memória
-    #retorna apenas os valores de colunas em cols_anno
-    chunk_iterator = pd.read_csv(annovar_path, sep='\t', usecols=cols_anno, dtype=str, chunksize=100000)
+    # itera sobre as linhas do arquivo do ANNOVAR, retornando chunks de 100000 linhas, para evitar estouro da memória
+    # retorna apenas os valores de colunas em cols_anno
+    chunk_iterator = pd.read_csv(
+        annovar_path, sep="\t", usecols=cols_anno, dtype=str, chunksize=100000
+    )
 
-    #itera sobre a lista de chunks geradas e obtém o HGVS das variantes
-    #verifica se ela está no set de variantes com genótipo válido
+    # itera sobre a lista de chunks geradas e obtém o HGVS das variantes
+    # verifica se ela está no set de variantes com genótipo válido
     for chunk in chunk_iterator:
-        chunk['Key'] = (chunk['Chr']
-                        .str.replace('chr', '') + "_" + chunk['Start'] + "_" + chunk['Ref'] + "_" + chunk['Alt'])
-        chunk = chunk[chunk['Key'].isin(all_valid_keys)]
+        chunk["Key"] = (
+            chunk["Chr"].str.replace("chr", "")
+            + "_"
+            + chunk["Start"]
+            + "_"
+            + chunk["Ref"]
+            + "_"
+            + chunk["Alt"]
+        )
+        chunk = chunk[chunk["Key"].isin(all_valid_keys)]
 
-        #criação de arrays com os valores obtidos das colunas de cada chunk
-        keys_arr = chunk['Key'].values
-        genes_arr = chunk['Gene.refGene'].fillna('Unknown').values
-        funcs_arr = chunk['Func.refGene'].fillna('').values
-        exonics_arr = chunk['ExonicFunc.refGene'].fillna('').values
-        aachanges_arr = chunk['AAChange.refGene'].fillna('').values
+        # criação de arrays com os valores obtidos das colunas de cada chunk
+        keys_arr = chunk["Key"].values
+        genes_arr = chunk["Gene.refGene"].fillna("Unknown").values
+        funcs_arr = chunk["Func.refGene"].fillna("").values
+        exonics_arr = chunk["ExonicFunc.refGene"].fillna("").values
+        aachanges_arr = chunk["AAChange.refGene"].fillna("").values
 
-        #verifica se os valores das colunas armazenados nos arrays são válidos
-        #substitui valores nulos por "."
-        clndn_arr = chunk[clndn_col].fillna('').values if clndn_col else [''] * len(keys_arr)
-        abraom_arr = chunk[abraom_col].fillna('.').values if abraom_col else ['.'] * len(keys_arr)
-        revel_arr = chunk[revel_col].fillna('.').values if revel_col else ['.'] * len(keys_arr)
-        cadd_arr = chunk[cadd_col].fillna('.').values if cadd_col else ['.'] * len(keys_arr)
+        # verifica se os valores das colunas armazenados nos arrays são válidos
+        # substitui valores nulos por "."
+        clndn_arr = (
+            chunk[clndn_col].fillna("").values
+            if clndn_col
+            else [""] * len(keys_arr)
+        )
+        abraom_arr = (
+            chunk[abraom_col].fillna(".").values
+            if abraom_col
+            else ["."] * len(keys_arr)
+        )
+        revel_arr = (
+            chunk[revel_col].fillna(".").values
+            if revel_col
+            else ["."] * len(keys_arr)
+        )
+        cadd_arr = (
+            chunk[cadd_col].fillna(".").values
+            if cadd_col
+            else ["."] * len(keys_arr)
+        )
 
-        #iteração sobre os arrays do ANNOVAR, utilizando o zip para iteração paralela
-        for k, gene, func, exonic, aachange, clndn_val, abraom_val, revel_val, cadd_val in zip(
-                keys_arr, genes_arr, funcs_arr, exonics_arr, aachanges_arr, clndn_arr, abraom_arr, revel_arr, cadd_arr):
-            #obtenção de valores e saneamento
-            location = f"{func} ({exonic})" if exonic and exonic != '.' else func #obtenção do location
-            transcript, variant_hgvs = parse_aachange(aachange) #obtenção do valor transcript
-            disease = parse_disease(clndn_val) if clndn_col else "Not provided" #obtenção da doença
+        # iteração sobre os arrays do ANNOVAR, utilizando o zip para iteração paralela
+        for (
+            k,
+            gene,
+            func,
+            exonic,
+            aachange,
+            clndn_val,
+            abraom_val,
+            revel_val,
+            cadd_val,
+        ) in zip(
+            keys_arr,
+            genes_arr,
+            funcs_arr,
+            exonics_arr,
+            aachanges_arr,
+            clndn_arr,
+            abraom_arr,
+            revel_arr,
+            cadd_arr,
+        ):
+            # obtenção de valores e saneamento
+            location = (
+                f"{func} ({exonic})" if exonic and exonic != "." else func
+            )  # obtenção do location
+            transcript, variant_hgvs = parse_aachange(
+                aachange
+            )  # obtenção do valor transcript
+            disease = (
+                parse_disease(clndn_val) if clndn_col else "Not provided"
+            )  # obtenção da doença
 
-            #formatação da frequência do ABraOM como numérico (float/int) para garantir a filtragem
+            # formatação da frequência do ABraOM como numérico (float/int) para garantir a filtragem
             try:
-                abraom_float = float(abraom_val) if abraom_val not in ['.', ''] else 0
+                abraom_float = (
+                    float(abraom_val) if abraom_val not in [".", ""] else 0
+                )
             except ValueError:
                 abraom_float = 0
 
-            #atualizando o dicionário com os dados da variante
-            #utiliza a HGVS para identificar a variante correta
+            # atualizando o dicionário com os dados da variante
+            # utiliza a HGVS para identificar a variante correta
             for sample_name in sample_names:
                 if k in samples_dict[sample_name]:
                     samples_dict[sample_name][k]["Gene"] = gene
@@ -336,7 +425,7 @@ def main(vcf_path, annovar_path, intervar_path, output_json_path):
                     samples_dict[sample_name][k]["REVEL_score"] = revel_val
                     samples_dict[sample_name][k]["CADD_phred"] = cadd_val
 
-        #remoção dos arrays armazenados
+        # remoção dos arrays armazenados
         del chunk, keys_arr, genes_arr, funcs_arr, exonics_arr, aachanges_arr
         del clndn_arr, abraom_arr, revel_arr, cadd_arr
         gc.collect()  # limpeza de resíduos na memória
@@ -344,94 +433,139 @@ def main(vcf_path, annovar_path, intervar_path, output_json_path):
     # ===========================================================================
     # 3. LER INTERVAR: OBTER CLASSIFICAÇÃO INTERVAR E FENÓTIPO OMIM
     # ===========================================================================
-    print(f"[3/4] Lendo classificações InterVar e cruzando Phenotype_MIM: {intervar_path}")
-    #obtendo header do intervar
-    with open(intervar_path, 'r') as f:
-        iv_header = f.readline().strip('\n').split('\t')
+    print(
+        f"[3/4] Lendo classificações InterVar e cruzando Phenotype_MIM: {intervar_path}"
+    )
+    # obtendo header do intervar
+    with open(intervar_path, "r") as f:
+        iv_header = f.readline().strip("\n").split("\t")
 
-    #obtenção das colunas do intervar
+    # obtenção das colunas do intervar
     chr_col = iv_header[0]
-    intervar_col = next((c for c in iv_header if 'InterVar' in c and 'Evidence' in c), None)
-    phenotype_col = next((c for c in iv_header if 'Phenotype_MIM' in c), None)
+    intervar_col = next(
+        (c for c in iv_header if "InterVar" in c and "Evidence" in c), None
+    )
+    phenotype_col = next((c for c in iv_header if "Phenotype_MIM" in c), None)
 
     if not intervar_col:
         print("[ERRO FATAL] Coluna do InterVar não encontrada no cabeçalho!")
         sys.exit(1)
 
-    #definição das colunas de interesse do intervar
-    #adiciona as colunas obtidas anteriormente caso elas existam
-    iv_cols = [chr_col, 'Start', 'Ref', 'Alt', intervar_col]
-    if phenotype_col: iv_cols.append(phenotype_col)
+    # definição das colunas de interesse do intervar
+    # adiciona as colunas obtidas anteriormente caso elas existam
+    iv_cols = [chr_col, "Start", "Ref", "Alt", intervar_col]
+    if phenotype_col:
+        iv_cols.append(phenotype_col)
 
     # itera sobre as linhas do arquivo do intervar, retornando chunks de 100000 linhas, para evitar estouro da memória
     # retorna apenas os valores de colunas em iv_cols
-    chunk_iterator_iv = pd.read_csv(intervar_path, sep='\t', usecols=iv_cols, dtype=str, chunksize=100000)
+    chunk_iterator_iv = pd.read_csv(
+        intervar_path, sep="\t", usecols=iv_cols, dtype=str, chunksize=100000
+    )
 
-    #itera sobre a lista de chunks geradas e obtém o HGVS da variante nos dados do intervar
-    #verifica se ela está no set de variantes com genótipo válido para as amostras
+    # itera sobre a lista de chunks geradas e obtém o HGVS da variante nos dados do intervar
+    # verifica se ela está no set de variantes com genótipo válido para as amostras
     for iv_chunk in chunk_iterator_iv:
-        iv_chunk['Key'] = iv_chunk[chr_col].str.replace('chr', '') + "_" + iv_chunk['Start'] + "_" + iv_chunk[
-            'Ref'] + "_" + iv_chunk['Alt']
-        iv_chunk = iv_chunk[iv_chunk['Key'].isin(all_valid_keys)]
+        iv_chunk["Key"] = (
+            iv_chunk[chr_col].str.replace("chr", "")
+            + "_"
+            + iv_chunk["Start"]
+            + "_"
+            + iv_chunk["Ref"]
+            + "_"
+            + iv_chunk["Alt"]
+        )
+        iv_chunk = iv_chunk[iv_chunk["Key"].isin(all_valid_keys)]
 
-        #cria os arrays com os valores das colunas obtidas durante a iteração
-        #substitui valores nulos por "."
-        keys_arr_iv = iv_chunk['Key'].values
-        classes_arr = iv_chunk[intervar_col].fillna('').values
-        pheno_arr = iv_chunk[phenotype_col].fillna('').values if phenotype_col else [''] * len(keys_arr_iv)
+        # cria os arrays com os valores das colunas obtidas durante a iteração
+        # substitui valores nulos por "."
+        keys_arr_iv = iv_chunk["Key"].values
+        classes_arr = iv_chunk[intervar_col].fillna("").values
+        pheno_arr = (
+            iv_chunk[phenotype_col].fillna("").values
+            if phenotype_col
+            else [""] * len(keys_arr_iv)
+        )
 
         # iteração sobre os arrays do intervar, utilizando o zip para iteração paralela
-        for k, raw_class, pheno_val in zip(keys_arr_iv, classes_arr, pheno_arr):
-            classification, acmg_evidence = parse_intervar(raw_class) #obtenção da classificação e evidência ACMG
+        for k, raw_class, pheno_val in zip(
+            keys_arr_iv, classes_arr, pheno_arr
+        ):
+            classification, acmg_evidence = parse_intervar(
+                raw_class
+            )  # obtenção da classificação e evidência ACMG
 
-            #repassa o mapping do orphanet para tradução visual e extração de herança limpa
-            omim_disease, omim_inheritance = parse_omim_disease(pheno_val, orpha_mapping)
+            # repassa o mapping do orphanet para tradução visual e extração de herança limpa
+            omim_disease, omim_inheritance = parse_omim_disease(
+                pheno_val, orpha_mapping
+            )
 
-            #atualiza o dicionário com os valores obtidos da iteração
-            #utiliza a HGVS para identificar a variante correta
+            # atualiza o dicionário com os valores obtidos da iteração
+            # utiliza a HGVS para identificar a variante correta
             for sample_name in sample_names:
                 if k in samples_dict[sample_name]:
-                    samples_dict[sample_name][k]["Classification"] = classification
-                    samples_dict[sample_name][k]["ACMG_Evidence"] = acmg_evidence
+                    samples_dict[sample_name][k]["Classification"] = (
+                        classification
+                    )
+                    samples_dict[sample_name][k]["ACMG_Evidence"] = (
+                        acmg_evidence
+                    )
 
-                    #preenche a herança do orphanet se estiver disponível
+                    # preenche a herança do orphanet se estiver disponível
                     if omim_inheritance != "Unknown":
-                        samples_dict[sample_name][k]["Inheritance"] = omim_inheritance
+                        samples_dict[sample_name][k]["Inheritance"] = (
+                            omim_inheritance
+                        )
 
-                    #fallback do OMIM, para tentar assimilar um valor
-                    current_disease = samples_dict[sample_name][k].get("Disease", "Not provided")
-                    if current_disease == "Not provided" or current_disease == "Unknown":
+                    # fallback do OMIM, para tentar assimilar um valor
+                    current_disease = samples_dict[sample_name][k].get(
+                        "Disease", "Not provided"
+                    )
+                    if (
+                        current_disease == "Not provided"
+                        or current_disease == "Unknown"
+                    ):
                         if omim_disease != "Not provided":
-                            samples_dict[sample_name][k]["Disease"] = omim_disease
-        #remoção dos arrays da memória
+                            samples_dict[sample_name][k]["Disease"] = (
+                                omim_disease
+                            )
+        # remoção dos arrays da memória
         del iv_chunk, keys_arr_iv, classes_arr, pheno_arr
-        gc.collect() #limpeza de resíduos na memória
+        gc.collect()  # limpeza de resíduos na memória
 
     # =========================================================================
     # PASSO 4: EXPORTAR JSON
     # =========================================================================
-    print(f"[4/4] Montando JSON final e gravando no disco...")
-    #criação da lista que conterá os dicionários das amostras
+    print("[4/4] Montando JSON final e gravando no disco...")
+    # criação da lista que conterá os dicionários das amostras
     final_output = []
-    #itera sobre as amostras e suas variantes válidas
+    # itera sobre as amostras e suas variantes válidas
     for sample_name, variants_dict in samples_dict.items():
-        #cria uma entrada válida para a amostra no json
-        final_output.append({
-            f"{sample_name}_vcf": list(variants_dict.values())
-        })
-    #cria o arquivo json
+        # cria uma entrada válida para a amostra no json
+        final_output.append(
+            {f"{sample_name}_vcf": list(variants_dict.values())}
+        )
+    # cria o arquivo json
     os.makedirs(os.path.dirname(output_json_path), exist_ok=True)
-    with open(output_json_path, 'w', encoding='utf-8') as f:
+    with open(output_json_path, "w", encoding="utf-8") as f:
         json.dump(final_output, f, indent=4, ensure_ascii=False)
 
-    print(f"==============================================================================")
-    print(f"GenoLaudo - CONCLUÍDO! O laudo formatado está em: {output_json_path}")
-    print(f"==============================================================================")
+    print(
+        "=============================================================================="
+    )
+    print(
+        f"GenoLaudo - CONCLUÍDO! O laudo formatado está em: {output_json_path}"
+    )
+    print(
+        "=============================================================================="
+    )
 
 
 if __name__ == "__main__":
-    #chamada da função main, que inicia o parsing
-    main(snakemake.input.norm_vcf,
-         snakemake.input.annovar_file,
-         snakemake.input.intervar_file,
-         snakemake.output.output_json)
+    # chamada da função main, que inicia o parsing
+    main(
+        snakemake.input.norm_vcf,
+        snakemake.input.annovar_file,
+        snakemake.input.intervar_file,
+        snakemake.output.output_json,
+    )

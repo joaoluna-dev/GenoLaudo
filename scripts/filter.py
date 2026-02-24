@@ -5,13 +5,14 @@
 
 # importação dos módulos
 from cyvcf2 import VCF, Writer
-import sys
 
 print("==============================================================================")
 print("GenoLaudo - Iniciando filtragem de vcf...")
-print("Referências para os valores definidos para a filtragem: \n"
-      "Van der Auwera et al. (2013) - GATK Best Practices. DOI: doi.org/10.1002/0471250953.bi1110s43 \n"
-      "Roy et al. (2018) - AMP/CAP Guidelines. DOI: doi.org/10.1016/j.jmoldx.2017.11.003")
+print(
+    "Referências para os valores definidos para a filtragem: \n"
+    "Van der Auwera et al. (2013) - GATK Best Practices. DOI: doi.org/10.1002/0471250953.bi1110s43 \n"
+    "Roy et al. (2018) - AMP/CAP Guidelines. DOI: doi.org/10.1016/j.jmoldx.2017.11.003"
+)
 print("==============================================================================")
 # arquivos de entrada e saída
 input_file = snakemake.input.vcf
@@ -52,7 +53,7 @@ for variant in vcf_file:
 
     # DP
     try:
-        format_dp = variant.format('DP')
+        format_dp = variant.format("DP")
     except KeyError:
         format_dp = None
 
@@ -62,7 +63,9 @@ for variant in vcf_file:
         valid_samples = 0
         for i, dp_val in enumerate(format_dp):
             if dp_val[0] < min_depth:
-                gt[i] = [-1] * variant.ploidy + [False]  #transforma uma amostra com DP ruim no genótipo missing ./.
+                gt[i] = [-1] * variant.ploidy + [
+                    False
+                ]  # transforma uma amostra com DP ruim no genótipo missing ./.
             else:
                 valid_samples += 1
 
@@ -70,10 +73,10 @@ for variant in vcf_file:
         if valid_samples == 0:
             filtered += 1
             continue
-        variant.genotypes = gt # salva a substituição
+        variant.genotypes = gt  # salva a substituição
 
     # caso format(DP) esteja vazio, usa como callback o campo INFO
-    elif variant.INFO.get('DP') is None or variant.INFO.get('DP') < min_depth:
+    elif variant.INFO.get("DP") is None or variant.INFO.get("DP") < min_depth:
         filtered += 1
         continue
 
@@ -85,33 +88,51 @@ for variant in vcf_file:
     if variant.is_indel or variant.is_deletion:
         # soft filters: se a condição não estiver presente, a variante passa
         # QD
-        if variant.INFO.get('QD') is not None and variant.INFO.get('QD') < min_qd:
+        if (
+            variant.INFO.get("QD") is not None
+            and variant.INFO.get("QD") < min_qd
+        ):
             filtered += 1
             continue
 
         # MQ
-        if variant.INFO.get('MQ') is not None and variant.INFO.get('MQ') < min_mq:
+        if (
+            variant.INFO.get("MQ") is not None
+            and variant.INFO.get("MQ") < min_mq
+        ):
             filtered += 1
             continue
 
         # FS
-        if variant.INFO.get('FS') is not None and variant.INFO.get('FS') > max_fs_indel:
+        if (
+            variant.INFO.get("FS") is not None
+            and variant.INFO.get("FS") > max_fs_indel
+        ):
             filtered += 1
             continue
 
         # SOR
-        if variant.INFO.get('SOR') is not None and variant.INFO.get('SOR') > max_sor:
+        if (
+            variant.INFO.get("SOR") is not None
+            and variant.INFO.get("SOR") > max_sor
+        ):
             filtered += 1
             continue
 
         # MQRankSum
-        if variant.INFO.get('MQRankSum') is not None and variant.INFO.get('MQRankSum') < min_mq_rank_sum:
+        if (
+            variant.INFO.get("MQRankSum") is not None
+            and variant.INFO.get("MQRankSum") < min_mq_rank_sum
+        ):
             filtered += 1
             continue
 
         # ReadPosRankSum
-        if variant.INFO.get('ReadPosRankSum') is not None and variant.INFO.get(
-                'ReadPosRankSum') < min_read_pos_rank_sum_indel:
+        if (
+            variant.INFO.get("ReadPosRankSum") is not None
+            and variant.INFO.get("ReadPosRankSum")
+            < min_read_pos_rank_sum_indel
+        ):
             filtered += 1
             continue
 
@@ -121,33 +142,50 @@ for variant in vcf_file:
     elif variant.is_snp:
         # soft filters: se a condição não estiver presente, a variante passa
         # QD
-        if variant.INFO.get('QD') is not None and variant.INFO.get('QD') < min_qd:
+        if (
+            variant.INFO.get("QD") is not None
+            and variant.INFO.get("QD") < min_qd
+        ):
             filtered += 1
             continue
 
         # MQ
-        if variant.INFO.get('MQ') is not None and variant.INFO.get('MQ') < min_mq:
+        if (
+            variant.INFO.get("MQ") is not None
+            and variant.INFO.get("MQ") < min_mq
+        ):
             filtered += 1
             continue
 
         # FS
-        if variant.INFO.get('FS') is not None and variant.INFO.get('FS') > max_fs_snp:
+        if (
+            variant.INFO.get("FS") is not None
+            and variant.INFO.get("FS") > max_fs_snp
+        ):
             filtered += 1
             continue
 
         # SOR
-        if variant.INFO.get('SOR') is not None and variant.INFO.get('SOR') > max_sor:
+        if (
+            variant.INFO.get("SOR") is not None
+            and variant.INFO.get("SOR") > max_sor
+        ):
             filtered += 1
             continue
 
         # MQRankSum
-        if variant.INFO.get('MQRankSum') is not None and variant.INFO.get('MQRankSum') < min_mq_rank_sum:
+        if (
+            variant.INFO.get("MQRankSum") is not None
+            and variant.INFO.get("MQRankSum") < min_mq_rank_sum
+        ):
             filtered += 1
             continue
 
         # ReadPosRankSum
-        if variant.INFO.get('ReadPosRankSum') is not None and variant.INFO.get(
-                'ReadPosRankSum') < min_read_pos_rank_sum_snp:
+        if (
+            variant.INFO.get("ReadPosRankSum") is not None
+            and variant.INFO.get("ReadPosRankSum") < min_read_pos_rank_sum_snp
+        ):
             filtered += 1
             continue
 
@@ -161,8 +199,12 @@ for variant in vcf_file:
 print("=========================================================================================================")
 print("GenoLaudo - Filtragem finalizada com sucesso!")
 print(f"GenoLaudo - Total de variantes processadas: {total}")
-print(f"GenoLaudo - Número de variantes que passaram na verificação: {passed} ({(passed / total) * 100:.2f}%)")
-print(f"GenoLaudo - Número de variantes reprovadas na verificação {filtered} ({(filtered / total) * 100:.2f}%)")
+print(
+    f"GenoLaudo - Número de variantes que passaram na verificação: {passed} ({(passed / total) * 100:.2f}%)"
+)
+print(
+    f"GenoLaudo - Número de variantes reprovadas na verificação {filtered} ({(filtered / total) * 100:.2f}%)"
+)
 print("=========================================================================================================")
 
 writer.close()
