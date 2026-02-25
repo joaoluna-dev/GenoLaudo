@@ -277,9 +277,16 @@ def execute():
         st.session_state.info_message = f"Ocorreu um erro durante a criação do laudo: {e}"
 
 
+#header do site
+st.set_page_config(
+	page_title='GenoLaudo: Bioinformática Clínica',
+	page_icon='🧬',
+	layout='wide'
+)
+st.logo("logo/logo1.png", size="large")
 
 #título principal
-st.title("Genolaudo")
+st.title("Genolaudo: Laudos de genômica médica")
 st.text("João Gabriel, 2026")
 
 #caminho absoluto do json com as anotações (estático)
