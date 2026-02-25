@@ -273,8 +273,6 @@ def main(vcf_path, annovar_path, intervar_path, output_json_path):
                 "Disease": "Not provided",
                 "Inheritance": "Unknown",
                 "ABraOM_Freq": 0,
-                "REVEL_score": ".",
-                "CADD_phred": ".",
                 "Parental_Origin": "Unknown",
             }
             all_valid_keys.add(
@@ -298,8 +296,6 @@ def main(vcf_path, annovar_path, intervar_path, output_json_path):
     # next(): itera sobre o elemento até obter a coluna correspondente, caso o elemento não exista, retorna None
     clndn_col = next((c for c in header if c == "CLNDN"), None)
     abraom_col = next((c for c in header if c == "abraom_freq"), None)
-    revel_col = next((c for c in header if c == "REVEL_score"), None)
-    cadd_col = next((c for c in header if c == "CADD_phred"), None)
 
     # colunas padrão do ANNOVAR
     # adiciona a cols_anno as colunas obtidas anteriormente caso elas existam
@@ -317,10 +313,6 @@ def main(vcf_path, annovar_path, intervar_path, output_json_path):
         cols_anno.append(clndn_col)
     if abraom_col:
         cols_anno.append(abraom_col)
-    if revel_col:
-        cols_anno.append(revel_col)
-    if cadd_col:
-        cols_anno.append(cadd_col)
 
     # itera sobre as linhas do arquivo do ANNOVAR, retornando chunks de 100000 linhas, para evitar estouro da memória
     # retorna apenas os valores de colunas em cols_anno
@@ -361,16 +353,6 @@ def main(vcf_path, annovar_path, intervar_path, output_json_path):
             if abraom_col
             else ["."] * len(keys_arr)
         )
-        revel_arr = (
-            chunk[revel_col].fillna(".").values
-            if revel_col
-            else ["."] * len(keys_arr)
-        )
-        cadd_arr = (
-            chunk[cadd_col].fillna(".").values
-            if cadd_col
-            else ["."] * len(keys_arr)
-        )
 
         # iteração sobre os arrays do ANNOVAR, utilizando o zip para iteração paralela
         for (
@@ -381,8 +363,6 @@ def main(vcf_path, annovar_path, intervar_path, output_json_path):
             aachange,
             clndn_val,
             abraom_val,
-            revel_val,
-            cadd_val,
         ) in zip(
             keys_arr,
             genes_arr,
@@ -391,8 +371,6 @@ def main(vcf_path, annovar_path, intervar_path, output_json_path):
             aachanges_arr,
             clndn_arr,
             abraom_arr,
-            revel_arr,
-            cadd_arr,
         ):
             # obtenção de valores e saneamento
             location = (
@@ -423,12 +401,10 @@ def main(vcf_path, annovar_path, intervar_path, output_json_path):
                     samples_dict[sample_name][k]["Variant"] = variant_hgvs
                     samples_dict[sample_name][k]["Disease"] = disease
                     samples_dict[sample_name][k]["ABraOM_Freq"] = abraom_float
-                    samples_dict[sample_name][k]["REVEL_score"] = revel_val
-                    samples_dict[sample_name][k]["CADD_phred"] = cadd_val
 
         # remoção dos arrays armazenados
         del chunk, keys_arr, genes_arr, funcs_arr, exonics_arr, aachanges_arr
-        del clndn_arr, abraom_arr, revel_arr, cadd_arr
+        del clndn_arr, abraom_arr
         gc.collect()  # limpeza de resíduos na memória
 
     # ===========================================================================
