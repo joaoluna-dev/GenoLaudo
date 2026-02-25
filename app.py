@@ -395,9 +395,10 @@ for json_file in files:
 
                         st.text("* Campos obrigatórios.")
                         # Botão de submissão do formulário
-                        submit_button = st.form_submit_button(label=f"Salvar Laudo: {sample}", on_click=execute())
+                        submit_button = st.form_submit_button(label=f"Salvar Laudo: {sample}")
 
                     if submit_button:
+                        execute()
                         st.info(st.session_state.info_message)
 
 
