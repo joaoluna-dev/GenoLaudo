@@ -286,7 +286,7 @@ st.set_page_config(
 st.logo("logo/logo1.png", size="large")
 
 #título principal
-st.title("Genolaudo: Laudos de genômica médica")
+st.title("Genolaudo")
 st.text("João Gabriel, 2026")
 
 #caminho absoluto do json com as anotações (estático)
