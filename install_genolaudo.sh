@@ -38,15 +38,15 @@ fi
 mkdir data/annovar/humandb/dbs
 
 #movendo os bancos de dados padrões do annovar para o diretório dbs, que na montagem receberá os bancos de dados do usuário
-mv hg38_refGeneWithVer.txt dbs/
-mv hg38_refGeneWIthVerMrna.fa dbs/
+mv data/annovar/humandb/hg38_refGeneWithVer.txt data/annovar/humandb/dbs/
+mv data/annovar/humandb/hg38_refGeneWIthVerMrna.fa data/annovar/humandb/dbs/
 
 #sanity check das databases padrão do annovar
 if [[ "$(ls -A data/annovar/humandb/dbs | wc -l)" -eq 0 ]]; then
-  :
-else
   echo "Os bancos de dados padrões do annovar não estão na pasta annovar/humandb/dbs. Interrompendo execução."
   exit 1
+else
+  :
 fi
 
 # --baixando e instalando o intervar--
