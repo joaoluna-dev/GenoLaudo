@@ -305,6 +305,8 @@ for file in os.listdir(json_file_path):
     if file.endswith(".json"):
         files.append(file)
 
+counter = 0
+
 #lendo os arquivos .json obtidos
 for json_file in files:
     json_folder = root / output_path / json_file.strip("_report.json")
@@ -317,7 +319,8 @@ for json_file in files:
                 for sample, variants in amostra.items():
                     pdf_file = json_folder / f"{sample}.pdf"
                     variants_dataframe = pd.DataFrame(variants)
-                    with st.form(key=f"formulario_{sample}"):
+                    counter += 1
+                    with st.form(f"sample_{counter}_form"):
                         st.header(f"Formulário da amostra {sample}")
                         st.subheader("1. Dados de Identificação do Paciente")
                         col1, col2, col3 = st.columns(3)
