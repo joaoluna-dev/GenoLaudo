@@ -5,3 +5,8 @@ __pycache__/
 .streamlit/
 .snakemake/
 *.sif
+*.def
+scripts/filter_teste.py
+pyproject.toml
+.gitignore
+
