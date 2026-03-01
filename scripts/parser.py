@@ -273,7 +273,7 @@ def main(vcf_path, annovar_path, intervar_path, output_json_path):
                 "Disease": "Not provided",
                 "Inheritance": "Unknown",
                 "ABraOM_Freq": 0,
-                "Parental_Origin": "Unknown",
+                "Parental_Origin": "-",
             }
             all_valid_keys.add(
                 key
