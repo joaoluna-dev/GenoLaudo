@@ -27,9 +27,9 @@ if 'info_message' not in st.session_state:
 
 def filter_data(variants_df, exame, genes):
     #(RICHARDS et al., 2015), (MACARTHUR et al., 2014), (PEDERSEN et al., 2021)
-    variants_df = variants_df[variants_df["ABraOM_Freq"].astype(float) <= 0.01]
+    variants_df = variants_df[variants_df["Frequência ABraOM"].astype(float) <= 0.01]
 
-    variants_df = variants_df.drop('ABraOM_Freq', axis=1)
+    variants_df = variants_df.drop('Frequência ABraOM', axis=1)
 
     if (exame == "Painel Genético" or exame == "Gene") and not genes:
         st.session_state.info_message = "Nenhum gene foi selecionado para o exame {exame}"
@@ -48,7 +48,7 @@ def filter_data(variants_df, exame, genes):
 
     elif exame == "Exoma":
         padrao_regex = r'\b(?:exonic|splicing)\b'
-        filtered_variants_df = variants_df[variants_df["Location"].str.contains(padrao_regex, na=False, regex=True)]
+        filtered_variants_df = variants_df[variants_df["Localização"].str.contains(padrao_regex, na=False, regex=True)]
         return filtered_variants_df
 
     return None

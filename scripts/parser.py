@@ -262,18 +262,18 @@ def main(vcf_path, annovar_path, intervar_path, output_json_path):
             zygosity = "Homozygous" if a == b else "Heterozygous"
             # a amostra homo ou heterozigota é inicializada no dicionário, criando o esquema para a variante
             samples_dict[sample_name][key] = {
-                "Genomic_Coordinate": f"chr{chrom}:{pos}:{ref}:{alt}",
+                "Coordenada Genômica": f"chr{chrom}:{pos}:{ref}:{alt}",
                 "Gene": "Unknown",
-                "Transcript": "Unknown",
-                "Location": "Unknown",
-                "Variant": "Unknown",
-                "Zygosity": zygosity,
-                "Classification": "Not classified",
-                "ACMG_Evidence": "",
-                "Disease": "Not provided",
-                "Inheritance": "Unknown",
-                "ABraOM_Freq": 0,
-                "Parental_Origin": "-",
+                "Transcrito": "Unknown",
+                "Localização": "Unknown",
+                "Variante": "Unknown",
+                "Zigosidade": zygosity,
+                "Classificação": "Not classified",
+                "Evidência ACMG": "",
+                "Doença": "Not provided",
+                "Herança": "Unknown",
+                "Frequência ABraOM": 0,
+                "Origem Parental": "-",
             }
             all_valid_keys.add(
                 key
@@ -396,11 +396,11 @@ def main(vcf_path, annovar_path, intervar_path, output_json_path):
             for sample_name in sample_names:
                 if k in samples_dict[sample_name]:
                     samples_dict[sample_name][k]["Gene"] = gene
-                    samples_dict[sample_name][k]["Location"] = location
-                    samples_dict[sample_name][k]["Transcript"] = transcript
-                    samples_dict[sample_name][k]["Variant"] = variant_hgvs
-                    samples_dict[sample_name][k]["Disease"] = disease
-                    samples_dict[sample_name][k]["ABraOM_Freq"] = abraom_float
+                    samples_dict[sample_name][k]["Localização"] = location
+                    samples_dict[sample_name][k]["Transcrito"] = transcript
+                    samples_dict[sample_name][k]["Variante"] = variant_hgvs
+                    samples_dict[sample_name][k]["Doença"] = disease
+                    samples_dict[sample_name][k]["Frequência ABraOM"] = abraom_float
 
         # remoção dos arrays armazenados
         del chunk, keys_arr, genes_arr, funcs_arr, exonics_arr, aachanges_arr
@@ -481,29 +481,29 @@ def main(vcf_path, annovar_path, intervar_path, output_json_path):
             # utiliza a HGVS para identificar a variante correta
             for sample_name in sample_names:
                 if k in samples_dict[sample_name]:
-                    samples_dict[sample_name][k]["Classification"] = (
+                    samples_dict[sample_name][k]["Classificação"] = (
                         classification
                     )
-                    samples_dict[sample_name][k]["ACMG_Evidence"] = (
+                    samples_dict[sample_name][k]["Evidência ACMG"] = (
                         acmg_evidence
                     )
 
                     # preenche a herança do orphanet se estiver disponível
                     if omim_inheritance != "Unknown":
-                        samples_dict[sample_name][k]["Inheritance"] = (
+                        samples_dict[sample_name][k]["Herança"] = (
                             omim_inheritance
                         )
 
                     # fallback do OMIM, para tentar assimilar um valor
                     current_disease = samples_dict[sample_name][k].get(
-                        "Disease", "Not provided"
+                        "Doença", "Not provided"
                     )
                     if (
                         current_disease == "Not provided"
                         or current_disease == "Unknown"
                     ):
                         if omim_disease != "Not provided":
-                            samples_dict[sample_name][k]["Disease"] = (
+                            samples_dict[sample_name][k]["Doença"] = (
                                 omim_disease
                             )
         # remoção dos arrays da memória
