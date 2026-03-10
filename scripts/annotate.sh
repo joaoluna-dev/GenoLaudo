@@ -125,8 +125,8 @@ if [ "$REFGENE_NAME" != "refGene" ]; then
     sed -i "1s/$REFGENE_NAME/refGene/g" "$RAW_TXT"
 fi
 
-# Injeção de colunas de frequência fantasmas para evitar o erro BA1 (Cromossomo 7 interpretado como freq)
-# Esta implementação via Python inline garante que o InterVar leia freq=0 em vez de colunas deslocadas.
+# Injeção de colunas de frequência fantasmas para evitar o erro BA1 e BS1
+# Evita o fallback do InterVar ao preencher colunas de populações e subpopulações
 python3 - <<EOF
 import sys
 import os
@@ -137,8 +137,12 @@ temp_path = file_path + ".tmp"
 with open(file_path, 'r') as f_in, open(temp_path, 'w') as f_out:
     header = f_in.readline().strip().split('\t')
 
-    # Colunas que o InterVar busca via hardcoding para calcular critérios populacionais
-    missing_cols = ['esp6500siv2_all', '1000g2015aug_all', 'gnomAD_genome_ALL', 'gnomAD_exome_ALL', 'AF']
+    # Lista abrangente das colunas de frequências lidas pelo algoritmo do InterVar
+    missing_cols = [
+        'esp6500siv2_all', '1000g2015aug_all', 'gnomAD_genome_ALL', 'gnomAD_exome_ALL',
+        'AF', 'AF_popmax', 'AF_male', 'AF_female', 'AF_raw', 'AF_afr', 'AF_sas', 'AF_amr',
+        'AF_eas', 'AF_nfe', 'AF_fin', 'AF_asj', 'AF_oth', 'Kaviar_AF', 'CG46'
+    ]
 
     # Identifica quais colunas realmente precisam ser adicionadas
     to_add = [c for c in missing_cols if c not in header]
