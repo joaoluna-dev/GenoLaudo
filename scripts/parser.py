@@ -244,23 +244,49 @@ def main(vcf_path, annovar_path, intervar_path, output_json_path):
     # iterando sobre o VCF para obter a notação HGVS das variantes
     for variant in vcf:
         chrom = variant.CHROM.replace("chr", "")
-        pos = str(variant.POS)
+        pos = int(variant.POS)
         ref = variant.REF
-        alt = variant.ALT[0]
-        key = f"{chrom}_{pos}_{ref}_{alt}"
+        alt = variant.ALT[0] if variant.ALT else "."
 
-        # itera sobre as amostras, se o genótipo for missing, a variante correspondente não é registrada para a amostra
+        # Emulação da matemática do ANNOVAR para geração da chave de junção
+        annovar_start = pos
+        annovar_ref = ref
+        annovar_alt = alt
+
+        # Aplica a quebra apenas para Indels (tamanhos de REF e ALT diferentes)
+        if len(annovar_ref) != len(annovar_alt):
+            # Verifica se a primeira base é idêntica (âncora do VCF)
+            if annovar_ref and annovar_alt and annovar_ref[0] == annovar_alt[0]:
+                annovar_ref = annovar_ref[1:]  # Remove a âncora de REF
+                annovar_alt = annovar_alt[1:]  # Remove a âncora de ALT
+
+                if len(annovar_ref) == 0:
+                    annovar_ref = "-"
+                    # Inserções puras: o ANNOVAR mantém o Start igual à posição da âncora
+                elif len(annovar_alt) == 0:
+                    annovar_alt = "-"
+                    # Deleções puras: o ANNOVAR soma 1 (a variante começa na base seguinte)
+                    annovar_start += 1
+                else:
+                    # Substituições em bloco (delins): soma 1 também
+                    annovar_start += 1
+
+        # A chave de cruzamento usa estritamente os dados normalizados sem a âncora
+        key = f"{chrom}_{annovar_start}_{annovar_ref}_{annovar_alt}"
+
+        # itera sobre as amostras, se o genótipo for missing, a variante não é registrada
         for idx, sample_name in enumerate(sample_names):
             gt = variant.genotypes[idx]
             a, b = gt[0], gt[1]  # genótipo diploide obtido
 
-            # pula genótipos missing, ou genótipos 0/0, que não possuem a variante em nenhum dos alelos
+            # pula genótipos missing ou 0/0 (referência)
             if a == -1 or b == -1 or (a == 0 and b == 0):
                 continue
 
             # define a zigosidade da amostra
             zygosity = "Homozygous" if a == b else "Heterozygous"
-            # a amostra homo ou heterozigota é inicializada no dicionário, criando o esquema para a variante
+
+            # a amostra é inicializada no dicionário, mantendo a coordenada visual do VCF original
             samples_dict[sample_name][key] = {
                 "Coordenada Genômica": f"chr{chrom}:{pos}:{ref}:{alt}",
                 "Gene": "Unknown",
@@ -275,9 +301,9 @@ def main(vcf_path, annovar_path, intervar_path, output_json_path):
                 "Frequência ABraOM": 0,
                 "Origem Parental": "-",
             }
-            all_valid_keys.add(
-                key
-            )  # armazena o HGVS da variante, para posterior verificação da sua validade
+
+            # armazena a chave modificada para o cruzamento nos Passos 2 e 3
+            all_valid_keys.add(key)
 
     print(f"      -> Total de amostras: {len(sample_names)}")
     print(f"      -> {len(all_valid_keys)} variantes válidas retidas.")
