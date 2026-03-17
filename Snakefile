@@ -34,16 +34,15 @@ rule filter_vcf:
     input:
         vcf = get_vcf_input
     params:
-        min_depth = 20,
-        min_qual = 30,
-        min_qd = 2.0,
-        min_mq = 40.0,
-        max_fs_snp = 60.0,
-        max_fs_indel = 200.0,
-        max_sor = 3.0,
-        min_mq_rank_sum = -12.5,
-        min_read_pos_rank_sum_snp = -8.0,
-        min_read_pos_rank_sum_indel = -20.0
+        min_depth= 20,
+        min_qd= 2.0,
+        min_mq= 40.0,
+        max_fs_snp= 60.0,
+        max_fs_indel= 200.0,
+        max_sor= 3.0,
+        min_mq_rank_sum= -12.5,
+        min_read_pos_rank_sum_snp= -8.0,
+        min_read_pos_rank_sum_indel= -20.0
     output:
         output_file = "data/temp/{sample}_filtered.vcf"
     script:
