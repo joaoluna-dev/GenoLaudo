@@ -287,7 +287,7 @@ st.set_page_config(
 	page_icon='🧬',
 	layout='wide'
 )
-st.logo("logo/logo1.png", size="large")
+st.logo("images/logo1.png", size="large")
 
 #título principal
 st.title("Genolaudo")
