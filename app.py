@@ -339,6 +339,13 @@ if st.session_state.status_pipeline == 'pendente':
                 st.error(f"{file}: {e}. Verifique o arquivo e tente novamente.")
                 os.remove(str(vcf_file_path / file))
 
+    clean_vcf = st.button("Limpar VCFs submetidos", type="primary")
+    if clean_vcf:
+        for file in os.listdir(vcf_file_path):
+            os.remove(str(vcf_file_path / file))
+        st.session_state.status_pipeline = 'pendente'
+        st.rerun()
+
     #habilita ou desativa a limpeza dos arquivos temporários automaticamente após a execução
     toggle_limpeza = st.toggle(label='Limpar dados temporários após execução', value=False)
     if toggle_limpeza:
