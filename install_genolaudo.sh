@@ -4,7 +4,7 @@ echo "Bem vindo ao assistente de instalação do GenoLaudo!"
 echo "São necessários no mínimo 70Gb de espaço livre de armazenamento para continuar"
 
 #verifica se o usuário possui o armazenamento necessário para a execução
-read -p "Deseja prosseguir? (s/n)" selection
+read -p "Deseja prosseguir? (s/n): " selection
 if [[ $selection == "s" ]]; then
   :
 elif [[ $selection == "n" ]]; then
@@ -74,6 +74,7 @@ mv mim2gene.txt data/intervar/intervardb/
 
 #removendo arquivos temporários
 rm InterVar.zip
+rm annovar.latest.tar.gz
 rm -rf InterVar-master/
 
 #criando estrutura de pastas para o projeto
