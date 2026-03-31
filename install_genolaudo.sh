@@ -101,9 +101,8 @@ if [[ $selection_genome == "s" ]]; then
 
   read -rp "Indique o local onde os arquivos devem ser armazenados (ex: /home/user/data/): " genome_place
 
-  mv hg38_abraom* "$genome_place"
-  mv hg38_clinvar* "$genome_place"
-  mv hg38_dbnsfpc* "$genome_place"
+  mv hg38.fa "$genome_place"
+  mv hg19.fa "$genome_place"
 
   echo "Dados movidos com sucesso."
 
@@ -139,8 +138,13 @@ if [[ $selection_dbs == "s" ]]; then
   mv hg38_abraom* "$data_place"
   mv hg38_clinvar* "$data_place"
   mv hg38_dbnsfpc* "$data_place"
+  mv hg19_abraom* "$data_place"
+  mv hg19_clinvar* "$data_place"
+  mv hg19_dbnsfpc* "$data_place"
 
   echo "Dados movidos com sucesso."
+  echo "Todos os arquivos baixados devem ser montados em conjunto com o container que executará a aplicação."
+
 elif [[ $selection_dbs == "n" ]]; then
   echo "Finalizando instalação..."
   exit 1
