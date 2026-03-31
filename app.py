@@ -34,7 +34,7 @@ if 'limpeza_dos_dados' not in st.session_state:
 
 #header do site
 st.set_page_config(
-	page_title='GenoLaudo: Bioinformática Clínica',
+	page_title='PathoClin: Bioinformática Clínica',
 	page_icon='🧬',
 	layout='wide'
 )
@@ -312,7 +312,7 @@ if st.session_state.status_pipeline == 'pendente':
     root = app_path.parent
     vcf_file_path = root / "data" / "raw"
 
-    st.subheader("Página inicial do pipeline")
+    st.subheader("Início")
 
     #upload dos arquivos de chamada de variante, para o interior do pipeline
     with st.form("upload_vcf", clear_on_submit=True):
