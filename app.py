@@ -360,7 +360,7 @@ elif st.session_state.status_pipeline == 'executando':
     st.subheader("Processando Dados...")
 
     # st.status mantém o usuário informado sobre o avanço
-    with st.status("Executando pipeline bioinformático...", expanded=True) as status:
+    with st.status("Executando análise dos dados submetidos...", expanded=True) as status:
         st.write("Carregando arquivos de entrada...")
         st.write("Iniciando execução do pipeline...")
         subprocess.run(["./run.sh"], check=True)
