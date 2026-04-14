@@ -230,9 +230,9 @@ def main(vcf_path, annovar_path, intervar_path, output_json_path):
     orpha_mapping = load_orpha_mapping(real_intervar_dir)
     print(f"      -> {len(orpha_mapping)} IDs médicos mapeados.")
 
-    # =========================================================================
+    # ============================================================================
     # 1. LEITURA DO VCF: OBTENÇÃO DO HGVS E GENÓTIPO DA VARIANTE PARA CADA AMOSTRA
-    # =========================================================================
+    # ============================================================================
     # leitura do vcf com o cyvcf2
     print(f"PathoClin - [1/4] Lendo VCF: {vcf_path}")
     vcf = VCF(vcf_path)
@@ -331,13 +331,13 @@ def main(vcf_path, annovar_path, intervar_path, output_json_path):
     with open(annovar_path, "r") as f:
         header = f.readline().strip().split("\t")
 
-    # identificando as colunas presentes no ANNOVAR
+    # identificando as colunas presentes no ANNOVAR das anotações feitas
     # next(): itera sobre o elemento até obter a coluna correspondente, caso o elemento não exista, retorna None
     clndn_col = next((c for c in header if c == "CLNDN"), None)
     abraom_col = next((c for c in header if c == "abraom_freq"), None)
-    clnsig_col = next((c for c in header if c == "CLNSIG"), None)  # Nova detecção da coluna do ClinVar
+    clnsig_col = next((c for c in header if c == "CLNSIG"), None) 
 
-    # colunas padrão do ANNOVAR
+    # colunas padrão do ANNOVAR a serem lidas pelo parser
     # adiciona a cols_anno as colunas obtidas anteriormente caso elas existam
     cols_anno = [
         "Chr",
@@ -354,7 +354,7 @@ def main(vcf_path, annovar_path, intervar_path, output_json_path):
     if abraom_col:
         cols_anno.append(abraom_col)
     if clnsig_col:
-        cols_anno.append(clnsig_col)  # Adicionada para extração
+        cols_anno.append(clnsig_col)
 
     # itera sobre as linhas do arquivo do ANNOVAR, retornando chunks de 100000 linhas, para evitar estouro da memória
     # retorna apenas os valores de colunas em cols_anno
@@ -399,7 +399,7 @@ def main(vcf_path, annovar_path, intervar_path, output_json_path):
             chunk[clnsig_col].fillna("").values
             if clnsig_col
             else [""] * len(keys_arr)
-        )  # Array com os dados do ClinVar
+        ) 
 
         # iteração sobre os arrays do ANNOVAR, utilizando o zip para iteração paralela
         for (
@@ -410,7 +410,7 @@ def main(vcf_path, annovar_path, intervar_path, output_json_path):
                 aachange,
                 clndn_val,
                 abraom_val,
-                clnsig_val,  # Variável iteradora do ClinVar
+                clnsig_val,
         ) in zip(
             keys_arr,
             genes_arr,
@@ -419,29 +419,23 @@ def main(vcf_path, annovar_path, intervar_path, output_json_path):
             aachanges_arr,
             clndn_arr,
             abraom_arr,
-            clnsig_arr,  # Inserida na iteração
+            clnsig_arr, 
         ):
-            # obtenção de valores e saneamento
-            location = (
-                f"{func} ({exonic})" if exonic and exonic != "." else func
-            )  # obtenção do location
-            transcript, variant_hgvs = parse_aachange(
-                aachange
-            )  # obtenção do valor transcript
-            disease = (
-                parse_disease(clndn_val) if clndn_col else "Not provided"
-            )  # obtenção da doença
+            # obtenção de valores e saneamento dos dados
+            location = (f"{func} ({exonic})" if exonic and exonic != "." else func)  # obtenção do location
+            transcript, variant_hgvs = parse_aachange(aachange)  # obtenção do valor transcript em parse_aachange()
+            disease = (parse_disease(clndn_val) if clndn_col else "Not provided")  # obtenção da doença em parse_disease()
 
             # extração e formatação da classificação do ClinVar
             clinvar_sig = ""
             if clnsig_col and str(clnsig_val).strip() not in [".", ""]:
                 # extrai a primeira classificação (caso haja múltiplas) e formata adequadamente
                 raw_sig = str(clnsig_val).split(",")[0].replace("_", " ").capitalize()
-                # filtra classificações inúteis ou não-conclusivas
+                # filtra classificações inúteis ou não conclusivas
                 if raw_sig.lower() not in ["not provided", "conflicting interpretations of pathogenicity", ""]:
                     clinvar_sig = raw_sig
 
-            # formatação da frequência do ABraOM como numérico (float/int) para garantir a filtragem
+            # formatação da frequência do ABraOM como numérico para garantir a filtragem
             try:
                 abraom_float = (
                     float(abraom_val) if abraom_val not in [".", ""] else 0
@@ -460,11 +454,11 @@ def main(vcf_path, annovar_path, intervar_path, output_json_path):
                     samples_dict[sample_name][k]["Doença"] = disease
                     samples_dict[sample_name][k]["Frequência ABraOM"] = abraom_float
 
-                    # Prioridade Clínica: se houver classificação válida do ClinVar, ela é registrada imediatamente
+                    # se houver classificação válida do ClinVar, ela é registrada imediatamente
                     if clinvar_sig:
                         samples_dict[sample_name][k]["Classificação"] = clinvar_sig
 
-        # remoção dos arrays armazenados
+        # remoção dos dados armazenados
         del chunk, keys_arr, genes_arr, funcs_arr, exonics_arr, aachanges_arr
         del clndn_arr, abraom_arr, clnsig_arr  # Memória do array do ClinVar limpa
         gc.collect()  # limpeza de resíduos na memória
@@ -473,7 +467,7 @@ def main(vcf_path, annovar_path, intervar_path, output_json_path):
     # 3. LER INTERVAR: OBTER CLASSIFICAÇÃO INTERVAR E FENÓTIPO OMIM
     # ===========================================================================
     print(
-        f"[3/4] Lendo classificações InterVar e cruzando Phenotype_MIM: {intervar_path}"
+        f"PathoClin - [3/4] Lendo classificações InterVar e cruzando Phenotype_MIM: {intervar_path}"
     )
     # obtendo header do intervar
     with open(intervar_path, "r") as f:
@@ -481,9 +475,7 @@ def main(vcf_path, annovar_path, intervar_path, output_json_path):
 
     # obtenção das colunas do intervar
     chr_col = iv_header[0]
-    intervar_col = next(
-        (c for c in iv_header if "InterVar" in c and "Evidence" in c), None
-    )
+    intervar_col = next((c for c in iv_header if "InterVar" in c and "Evidence" in c), None)
     phenotype_col = next((c for c in iv_header if "Phenotype_MIM" in c), None)
 
     if not intervar_col:
@@ -527,24 +519,18 @@ def main(vcf_path, annovar_path, intervar_path, output_json_path):
         )
 
         # iteração sobre os arrays do intervar, utilizando o zip para iteração paralela
-        for k, raw_class, pheno_val in zip(
-                keys_arr_iv, classes_arr, pheno_arr
-        ):
-            classification, acmg_evidence = parse_intervar(
-                raw_class
-            )  # obtenção da classificação e evidência ACMG
+        for k, raw_class, pheno_val in zip(keys_arr_iv, classes_arr, pheno_arr):
+            classification, acmg_evidence = parse_intervar(raw_class)  # obtenção da classificação e evidência ACMG
 
             # repassa o mapping do orphanet para tradução visual e extração de herança limpa
-            omim_disease, omim_inheritance = parse_omim_disease(
-                pheno_val, orpha_mapping
-            )
+            omim_disease, omim_inheritance = parse_omim_disease(pheno_val, orpha_mapping)
 
             # atualiza o dicionário com os valores obtidos da iteração
             # utiliza a HGVS para identificar a variante correta
             for sample_name in sample_names:
                 if k in samples_dict[sample_name]:
 
-                    # Override Secundário: Utiliza a classificação do InterVar APENAS se o ClinVar for omisso (Not classified) no Passo 2
+                    # a classificação ACMG é atribuida apenas quando o a atribuição do clinvar não é fornecida
                     if samples_dict[sample_name][k]["Classificação"] == "Not classified":
                         samples_dict[sample_name][k]["Classificação"] = classification
                         samples_dict[sample_name][k]["Evidência ACMG"] = acmg_evidence
@@ -553,14 +539,10 @@ def main(vcf_path, annovar_path, intervar_path, output_json_path):
 
                     # preenche a herança do orphanet se estiver disponível
                     if omim_inheritance != "Unknown":
-                        samples_dict[sample_name][k]["Herança"] = (
-                            omim_inheritance
-                        )
+                        samples_dict[sample_name][k]["Herança"] = (omim_inheritance)
 
                     # fallback do OMIM, para tentar assimilar um valor
-                    current_disease = samples_dict[sample_name][k].get(
-                        "Doença", "Not provided"
-                    )
+                    current_disease = samples_dict[sample_name][k].get("Doença", "Not provided")
                     if (
                             current_disease == "Not provided"
                             or current_disease == "Unknown"
