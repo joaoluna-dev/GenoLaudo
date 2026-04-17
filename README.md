@@ -130,7 +130,7 @@ Biomédico, Bioinformata e Desenvolvedor Python. Trabalha com ciência de dados 
 - Docker:
 
     ```bash
-    docker run -d --name genolaudo -p 8501:8501 -v /caminho/local/para/o/vcfbruto.vcf:/app/data/input:ro -v /caminho/local/para/bancos_annovar:/app/data/annovar/humandb/dbs:ro -v /caminho/local/para/o/genoma_de_referencia.fa:/app/data/genome:ro genolaudo:latest
+    docker run -d --name genolaudo -p 8501:8501 -v /caminho/local/para/diretorio/bancos_annovar:/app/data/annovar/humandb/dbs:ro -v /caminho/local/para/os/genomas_de_referencia:/app/data/genome:ro genolaudo:latest
     ```
     `-d`: executa o container em modo detached (desacoplado), liberando o terminal para uso <br>
     `--name genolaudo`: define o nome do container <br>
