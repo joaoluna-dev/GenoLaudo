@@ -1,4 +1,4 @@
-version: '3.8'
+name: pathoclin
 
 services:
   pathoclin:
@@ -8,5 +8,5 @@ services:
       - "8501:8501"
     volumes:
       - ./data/annovar/humandb/dbs:/app/data/annovar/humandb/dbs:ro
-      - /data/genome:/app/data/genome:ro
+      - ./data/genome:/app/data/genome:ro
     restart: unless-stopped
