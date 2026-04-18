@@ -8,10 +8,18 @@ __pycache__/
 *.def
 pyproject.toml
 .gitignore
-data/annovar/humandb/dbs/*.log
-data/annovar/humandb/dbs/*.txt
-data/annovar/humandb/dbs/*.idx
-data/annovar/humandb/dbs/*.fa
+data/annovar/humandb/dbs/hg38_abraom.txt
+data/annovar/humandb/dbs/hg38_abraom.txt.idx
+data/annovar/humandb/dbs/hg38_clinvar_20250721.txt
+data/annovar/humandb/dbs/hg38_clinvar_20250721.txt.idx
+data/annovar/humandb/dbs/hg38_dbnsfp42c.txt
+data/annovar/humandb/dbs/hg38_dbnsfp42c.txt.idx
+data/annovar/humandb/dbs/hg19_abraom.txt
+data/annovar/humandb/dbs/hg19_abraom.txt.idx
+data/annovar/humandb/dbs/hg19_clinvar_20250721.txt
+data/annovar/humandb/dbs/hg19_clinvar_20250721.txt.idx
+data/annovar/humandb/dbs/hg19_dbnsfp42c.txt
+data/annovar/humandb/dbs/hg19_dbnsfp42c.txt.idx
 data/genome/*.fa
 data/genome/*.fai
 
