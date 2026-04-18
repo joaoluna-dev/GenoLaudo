@@ -102,8 +102,8 @@ Biomédico, Bioinformata e Desenvolvedor Python. Trabalha com ciência de dados 
 2. **Realizar a instalação das ferramentas auxiliares**
    Execute o script abaixo para iniciar o download e instalação do ANNOVAR e do Intervar, e a criação da estrutura de pastas dos dados gerados
     ```bash
-    chmod +x install_genolaudo.sh
-    ./install_genolaudo.sh
+    chmod +x install_pathoclin.sh
+    ./install_pathoclin.sh
     ```
 > **ANNOVAR e Bancos de dados**: para completar a instalação, você precisa de um link para download do ANNOVAR, que pode ser obtido [aqui](https://www.openbioinformatics.org/annovar/annovar_download_form.php). Para obter os bancos de dados ClinVar, ABraOM e dbSNFP nas versões de interesse, clique [aqui](https://annovar.openbioinformatics.org/en/latest/user-guide/download/).
 
