@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  pathoclin:
+    image: pathoclin:latest
+    container_name: pathoclin
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./data/annovar/humandb/dbs:/app/data/annovar/humandb/dbs:ro
+      - /data/genome:/app/data/genome:ro
+    restart: unless-stopped
